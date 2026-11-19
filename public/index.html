@@ -192,6 +192,7 @@
           <button onclick="setFiltroEstado('PENDIENTES')" id="btnFiltro-PENDIENTES" class="filtro-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 transition">⏳ Pendientes</button>
           <button onclick="setFiltroEstado('COBRADOS')" id="btnFiltro-COBRADOS" class="filtro-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition">✅ Cobrados</button>
           <button onclick="setFiltroEstado('ATRASADOS')" id="btnFiltro-ATRASADOS" class="filtro-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition">⚠️ Con Atraso</button>
+          <button onclick="setFiltroEstado('MOROSOS')" id="btnFiltro-MOROSOS" class="filtro-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600/30 text-rose-300 border border-rose-500/40 hover:bg-rose-600/40 transition">🚨 Zona Roja (<span id="countMorosos">0</span>)</button>
         </div>
       </div>
 
@@ -485,8 +486,16 @@
           <p class="text-xs text-slate-400 mt-0.5">Control de fondo inicial, cobranza, préstamos y gastos de ruta.</p>
         </div>
 
-        <div class="flex items-center gap-2">
-          <label class="text-xs text-slate-400 font-semibold">Ver corte de:</label>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="exportarReporteDiaExcel()" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>Exportar Excel / CSV</span>
+          </button>
+          <button onclick="imprimirReporteCorteDia()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span>Imprimir Reporte PDF</span>
+          </button>
+          <label class="text-xs text-slate-400 font-semibold ml-2">Ver corte de:</label>
           <select id="selectCorteCobrador" onchange="cargarCorteHoy(this.value)" class="bg-slate-800 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-700 outline-none">
             <option value="ALL">🏢 Consolidado General (Toda la Empresa)</option>
             <!-- Opciones dinámicas de cobradores -->
@@ -865,6 +874,10 @@
           <i data-lucide="message-circle" class="w-5 h-5"></i>
           <span>ENVIAR RECIBO FORMAL POR WHATSAPP</span>
         </button>
+        <button onclick="imprimirTicketTermico58mm()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700 transition">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span>🖨️ Imprimir Ticket Térmico (58mm / 80mm)</span>
+        </button>
         <button onclick="cerrarModalRecibo()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition">
           Continuar Cobrando
         </button>
@@ -1221,6 +1234,12 @@
         </div>
       </form>
     </div>
+  </div>
+
+
+  <!-- ÁREA IMPRIMIBLE: TICKET TÉRMICO 58mm -->
+  <div id="thermalPrintArea" class="hidden">
+    <!-- Render dinámico del ticket -->
   </div>
 
 </body>

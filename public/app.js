@@ -374,15 +374,21 @@ function renderizarClientes() {
   const countLiqBadge = document.getElementById('countLiquidados');
   if (countLiqBadge) countLiqBadge.textContent = totalLiquidados;
 
+  // Contar morosos en zona roja (3 o más días de atraso)
+  const totalMorosos = appState.clientes.filter(c => (c.diasAtraso >= 3) && c.saldoPendiente > 0 && !c.oculto).length;
+  const countMorososBadge = document.getElementById('countMorosos');
+  if (countMorososBadge) countMorososBadge.textContent = totalMorosos;
+
   // FILTRADO INTELIGENTE:
-  // Si el usuario elige LIQUIDADOS, muestra solo los que ya terminaron de pagar
   if (appState.filtroEstado === 'LIQUIDADOS') {
     lista = lista.filter(c => c.saldoPendiente === 0);
   } else if (appState.filtroEstado === 'OCULTOS') {
     lista = lista.filter(c => c.oculto === true);
+  } else if (appState.filtroEstado === 'MOROSOS') {
+    // Zona Roja: Más de 3 días sin abonar
+    lista = lista.filter(c => (c.diasAtraso >= 3) && c.saldoPendiente > 0 && !c.oculto);
   } else {
     // EN LA PANTALLA PRINCIPAL (TODOS, PENDIENTES, COBRADOS, ATRASADOS):
-    // ¡YA NO SALEN LOS QUE YA LIQUIDARON NI LOS OCULTOS! Solo préstamos activos en calle
     lista = lista.filter(c => c.saldoPendiente > 0 && !c.oculto);
 
     if (appState.filtroEstado === 'PENDIENTES') {
@@ -421,9 +427,14 @@ function renderizarClientes() {
 
     let badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
     let badgeText = 'PENDIENTE HOY';
+    const esMorosoZonaRoja = c.diasAtraso >= 3 && !estaLiquidado;
+
     if (estaLiquidado) {
       badgeColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
       badgeText = 'LIQUIDADO';
+    } else if (esMorosoZonaRoja) {
+      badgeColor = 'bg-rose-600/30 text-rose-300 border-rose-500 animate-pulse font-black';
+      badgeText = '🚨 ZONA ROJA (' + c.diasAtraso + ' DÍAS)';
     } else if (pagadoHoy) {
       badgeColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
       badgeText = 'COBRADO HOY';
@@ -1828,4 +1839,149 @@ async function activarSerialClienteAction() {
   } catch (e) {
     alert('Error al activar licencia: ' + e.message);
   }
+}
+
+// ==========================================
+// 1. TICKET TÉRMICO 58mm / 80mm
+// ==========================================
+function imprimirTicketTermico58mm() {
+  const r = appState.ultimoRecibo;
+  if (!r) return;
+
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const telefono = appState.config?.telefono || "961 276 5041";
+  const direccion = appState.config?.direccion || "Matriz de Operaciones";
+
+  const ticketHtml = `
+    <style>
+      @page { margin: 0; size: 58mm auto; }
+      body { margin: 0; padding: 4px; font-family: 'Courier New', monospace; font-size: 11px; color: #000; width: 54mm; }
+      .text-center { text-align: center; }
+      .text-right { text-align: right; }
+      .bold { font-weight: bold; }
+      .line { border-top: 1px dashed #000; margin: 4px 0; }
+    </style>
+    <div class="text-center">
+      <div class="bold" style="font-size: 13px;">${empresa}</div>
+      <div>${direccion}</div>
+      <div>Tel: ${telefono}</div>
+      <div class="line"></div>
+      <div class="bold">COMPROBANTE DE PAGO</div>
+      <div>FOLIO: ${r.folio}</div>
+      <div>FECHA: ${r.fechaHora}</div>
+      <div>COBRADOR: ${r.cobradorNombre}</div>
+      <div class="line"></div>
+    </div>
+    <div>
+      <div><b>CLIENTE:</b> ${r.clienteNombre}</div>
+    </div>
+    <div class="line"></div>
+    <div style="font-size: 13px;">
+      <b>MONTO COBRADO: $${r.monto.toFixed(2)}</b>
+    </div>
+    <div class="line"></div>
+    <div>Saldo Anterior: $${r.saldoAnterior.toFixed(2)}</div>
+    <div class="bold">NUEVO SALDO RESTANTE: $${r.saldoNuevo.toFixed(2)}</div>
+    <div class="line"></div>
+    <div class="text-center" style="font-size: 9px;">
+      ¡Muchas gracias por su puntual pago del día de hoy!<br>
+      Conserve este ticket oficial.
+    </div>
+  `;
+
+  const ventanaTicket = window.open('', '_blank', 'width=350,height=500');
+  ventanaTicket.document.write(ticketHtml);
+  ventanaTicket.document.close();
+  ventanaTicket.focus();
+  setTimeout(() => {
+    ventanaTicket.print();
+    ventanaTicket.close();
+  }, 250);
+}
+
+// ==========================================
+// 2. EXPORTAR REPORTE DEL DÍA A EXCEL / CSV
+// ==========================================
+function exportarReporteDiaExcel() {
+  const hoyStr = new Date().toISOString().split('T')[0];
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  
+  let cobros = appState.clientes.filter(c => c.pagadoHoy);
+  let pendientes = appState.clientes.filter(c => !c.pagadoHoy && c.saldoPendiente > 0);
+
+  let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+  csvContent += "REPORTE DE COBRANZA DEL DÍA - " + empresa + "\n";
+  csvContent += "FECHA: " + hoyStr + "\n\n";
+
+  // 1. Tabla de Cobrados
+  csvContent += "--- CLIENTES COBRADOS HOY ---\n";
+  csvContent += "Código,Cliente,Teléfono,Dirección,Cobrador,Cuota Cobrada,Saldo Restante,Estatus\n";
+  cobros.forEach(c => {
+    csvContent += `"${c.id}","${c.nombre}","${c.telefono}","${c.direccion}","${c.cobradorNombre || ''}","$${c.ultimoPagoMonto || c.cuotaDiaria}","$${c.saldoPendiente}","COBRADO"\n`;
+  });
+
+  csvContent += "\n--- CLIENTES PENDIENTES DE HOY ---\n";
+  csvContent += "Código,Cliente,Teléfono,Dirección,Cobrador,Cuota Pendiente,Saldo Restante,Días Atraso\n";
+  pendientes.forEach(c => {
+    csvContent += `"${c.id}","${c.nombre}","${c.telefono}","${c.direccion}","${c.cobradorNombre || ''}","$${c.cuotaDiaria}","$${c.saldoPendiente}","${c.diasAtraso} días"\n`;
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `REPORTE_COBRANZA_${hoyStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  alert('📥 Reporte del día exportado en Excel/CSV correctamente.');
+}
+
+function imprimirReporteCorteDia() {
+  window.print();
+}
+
+// ==========================================
+// 3. COBRANZA URGENTE A MOROSOS Y AVALES
+// ==========================================
+function avisarMorosoUrgenteWhatsApp(clienteId) {
+  const c = appState.clientes.find(cli => cli.id === clienteId);
+  if (!c) return;
+  const tel = (c.telefono || '').replace(/\D/g, '');
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+
+  const msg = 
+    "⚠️ *NOTIFICACIÓN DE COBRANZA - ADELANTO URGENTE* ⚠️\n" +
+    "🏛️ *" + empresa + "*\n" +
+    "-----------------------------------------\n" +
+    "Estimado(a) *" + c.nombre + "*:\n\n" +
+    "Le informamos que su crédito presenta un retraso de *" + c.diasAtraso + " DÍAS* sin registrar su abono diario correspondiente.\n\n" +
+    "💰 *Saldo Pendiente:* $" + (c.saldoPendiente || 0).toFixed(2) + " MXN\n" +
+    "🗓️ *Cuota Diaria Requerida:* $" + c.cuotaDiaria + " MXN\n" +
+    "-----------------------------------------\n" +
+    "📌 Le solicitamos comunicarse hoy mismo o esperar la visita de su cobrador para regularizar su cuenta y evitar cargos moratorios o visita formal al aval de garantía.\n\n" +
+    "📞 Atención a Clientes: " + (appState.config?.telefono || "961 276 5041");
+
+  window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function contactarAvalWhatsApp(clienteId) {
+  const c = appState.clientes.find(cli => cli.id === clienteId);
+  if (!c || !c.avalTelefono) {
+    alert('Este cliente no tiene teléfono de aval registrado.');
+    return;
+  }
+  const telAval = (c.avalTelefono || '').replace(/\D/g, '');
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+
+  const msg = 
+    "📢 *AVISO AVAL SOLIDARIO DE GARANTÍA* 📢\n" +
+    "🏛️ *" + empresa + "*\n" +
+    "-----------------------------------------\n" +
+    "Estimado(a) *" + (c.avalNombre || 'Aval') + "*:\n\n" +
+    "Nos comunicamos de la financiera para informarle que el titular del crédito, *" + c.nombre + "*, a quien usted respalda como aval, presenta un atraso de *" + c.diasAtraso + " días* en sus pagos diarios.\n\n" +
+    "💰 *Saldo por Liquidar:* $" + (c.saldoPendiente || 0).toFixed(2) + " MXN\n" +
+    "-----------------------------------------\n" +
+    "Agradecemos su valioso apoyo para recordarle o ponerse en contacto con nosotros al " + (appState.config?.telefono || "961 276 5041") + " para evitar afectaciones legales.";
+
+  window.open('https://wa.me/' + telAval + '?text=' + encodeURIComponent(msg), '_blank');
 }
