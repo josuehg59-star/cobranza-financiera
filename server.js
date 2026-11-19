@@ -4,6 +4,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -956,4 +957,19 @@ app.post('/api/cobros/batch-offline', (req, res) => {
 
   writeDB(db);
   res.json({ success: true, procesados });
+});
+
+// ==========================================
+// ACTUALIZACIÓN AUTOMÁTICA DESDE GITHUB
+// ==========================================
+app.post('/api/sistema/actualizar', (req, res) => {
+  console.log('🔄 Ejecutando actualización desde GitHub...');
+  exec('git pull origin main', { cwd: __dirname }, (error, stdout, stderr) => {
+    if (error) {
+      console.error('Error al actualizar:', stderr || error.message);
+      return res.status(500).json({ error: 'Error al actualizar: ' + (stderr || error.message) });
+    }
+    console.log('✅ Actualización completada:', stdout);
+    res.json({ success: true, message: '¡Sistema actualizado con éxito desde GitHub!', detalle: stdout });
+  });
 });

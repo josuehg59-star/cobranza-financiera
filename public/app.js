@@ -1985,3 +1985,41 @@ function contactarAvalWhatsApp(clienteId) {
 
   window.open('https://wa.me/' + telAval + '?text=' + encodeURIComponent(msg), '_blank');
 }
+
+// ====================================================
+// ACTUALIZADOR AUTOMÁTICO DESDE GITHUB (JOSUE HERNANDEZ)
+// ====================================================
+async function ejecutarActualizacionGitHub() {
+  const btn = document.getElementById('btnActualizarSistema');
+  const lbl = document.getElementById('lblStatusUpdate');
+  if (!confirm('¿Deseas buscar y descargar las últimas actualizaciones desde GitHub?')) return;
+  
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Actualizando desde GitHub...</span>';
+    lucide.createIcons();
+  }
+  if (lbl) lbl.textContent = 'Conectando con el repositorio de Josue Hernandez en GitHub...';
+
+  try {
+    const res = await fetch('/api/sistema/actualizar', { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      alert('🎉 ' + data.message + '\n\nDetalle:\n' + (data.detalle || 'Todo al día.'));
+      if (lbl) lbl.textContent = '✅ Sistema al día: ' + new Date().toLocaleTimeString();
+      window.location.reload();
+    } else {
+      alert('⚠️ No se pudo actualizar: ' + (data.error || 'Error desconocido'));
+      if (lbl) lbl.textContent = '❌ Error al actualizar';
+    }
+  } catch (err) {
+    alert('❌ Error de conexión al actualizar: ' + err.message);
+    if (lbl) lbl.textContent = '❌ Fallo de conexión';
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4"></i><span>Descargar Actualizaciones Ahora</span>';
+      lucide.createIcons();
+    }
+  }
+}
