@@ -1,6 +1,6 @@
 {
   "config": {
-    "nombreEmpresa": "FINANCIERA CRÉDITO FÁCIL",
+    "nombreEmpresa": "https://financiera-nexus-8880.loca.lt",
     "eslogan": "Préstamos Diarios y Soluciones al Instante",
     "telefono": "55 1234 5678",
     "direccion": "Av. Central #120, Col. Centro",
@@ -232,5 +232,12 @@
     }
   ],
   "cortes": [],
-  "gastos": []
+  "gastos": [],
+  "licencia": {
+    "serial": "NEXUS-JH-3M-20271119-C4D5A951",
+    "empresa": "https://financiera-nexus-8880.loca.lt",
+    "rutasPermitidas": 3,
+    "expira": "20271119",
+    "activadaEl": "2026-11-19T02:57:56.395Z"
+  }
 }

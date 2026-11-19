@@ -1,4 +1,4 @@
-const { MASTER_DEV, generarSerialLicencia, validarSerialLicencia } = require('./licencias');
+const { MASTER_DEV, generarSerialLicencia, validarSerialLicencia, evaluarEstadoLicencia } = require('./licencias');
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -846,41 +846,62 @@ app.listen(PORT, '0.0.0.0', () => {
 // ==========================================
 app.get('/api/licencia/status', (req, res) => {
   const db = readDB();
-  const lic = db.licencia || generarSerialLicencia(db.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL", 5, "MENSUAL", 60);
-  const status = validarSerialLicencia(lic.serial, db.config?.nombreEmpresa || lic.empresa);
+  const evaluacion = evaluarEstadoLicencia(db);
+  writeDB(db);
 
   res.json({
-    ...lic,
-    ...status,
-    creador: MASTER_DEV.nombre,
-    telefonoSoporte: MASTER_DEV.telefono,
+    ...evaluacion,
     cobradoresActuales: (db.cobradores || []).length,
-    rutasDisponibles: (lic.rutasPermitidas || 5) - (db.cobradores || []).length,
+    rutasDisponibles: Math.max(0, (evaluacion.rutasPermitidas || 2) - (db.cobradores || []).length),
     versionActual: "1.0.0",
     repoGitHub: "josuehg59-star/cobranza-financiera"
   });
 });
 
 app.post('/api/licencia/activar', (req, res) => {
-  const { serial } = req.body;
+  const { serial, empresa: empresaParam } = req.body;
   const db = readDB();
-  const empresa = db.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const empresaActual = (db.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL").trim();
 
-  const validacion = validarSerialLicencia(serial, empresa);
+  // 1. Validar contra la empresa configurada
+  let validacion = validarSerialLicencia(serial, empresaActual);
+
+  // 2. Si no coincide, intentar contra versión sin acentos
   if (!validacion.valida) {
-    return res.status(400).json({ error: validacion.error || 'Serial inválido o no corresponde a esta empresa.' });
+    const valLimpia = validarSerialLicencia(serial, "FINANCIERA CREDITO FACIL");
+    if (valLimpia.valida) {
+      validacion = valLimpia;
+      db.config.nombreEmpresa = "FINANCIERA CRÉDITO FÁCIL";
+    }
+  }
+
+  // 3. Si se pasó empresa explícita
+  if (!validacion.valida && empresaParam) {
+    const valParam = validarSerialLicencia(serial, empresaParam);
+    if (valParam.valida) {
+      validacion = valParam;
+      db.config.nombreEmpresa = empresaParam;
+    }
+  }
+
+  if (!validacion.valida) {
+    return res.status(400).json({ error: validacion.error || 'El serial no coincide con el nombre de esta empresa.' });
   }
 
   db.licencia = {
     serial,
-    empresa,
+    empresa: validacion.empresa,
     rutasPermitidas: validacion.rutasPermitidas,
     expira: validacion.expira,
     activadaEl: new Date().toISOString()
   };
   writeDB(db);
 
-  res.json({ success: true, message: '¡Licencia activada con éxito!', licencia: db.licencia });
+  res.json({
+    success: true,
+    message: '¡Licencia activada con éxito para ' + validacion.rutasPermitidas + ' rutas!',
+    licencia: db.licencia
+  });
 });
 
 // Panel Maestro del Desarrollador (Josue Hernandez)

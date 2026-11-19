@@ -1580,20 +1580,81 @@ async function toggleOcultarCliente(clienteId) {
 // ==========================================
 // MÓDULO LICENCIAS Y GITHUB UPDATER - JOSUE HERNANDEZ (9612765041)
 // ==========================================
+
+// ==========================================
+// MONITOR DE VIGENCIA Y BLOQUEO POR CADUCIDAD
+// ==========================================
 async function cargarEstadoLicencia() {
   try {
     const res = await fetch('/api/licencia/status');
     const data = await res.json();
-    
+    appState.licencia = data;
+
+    const badge = document.getElementById('badgeLicStatus');
     const rutasEl = document.getElementById('lblLicRutas');
     const dispEl = document.getElementById('lblLicDisponibles');
     const vigEl = document.getElementById('lblLicVigencia');
 
     if (rutasEl) rutasEl.textContent = data.rutasPermitidas + ' Cobradores';
     if (dispEl) dispEl.textContent = data.rutasDisponibles + ' Libres';
-    if (vigEl) vigEl.textContent = data.expira;
+    if (vigEl) {
+      vigEl.innerHTML = `${data.fechaLegible || data.expira} <span class="text-[10px] text-slate-400">(${data.diasRestantes} días)</span>`;
+    }
+
+    if (badge) {
+      if (data.estado === 'ACTIVA') {
+        badge.className = 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full text-[10px] font-black uppercase';
+        badge.textContent = 'LICENCIA ACTIVA (' + data.diasRestantes + ' DÍAS)';
+      } else if (data.estado === 'MODO_PRUEBA') {
+        badge.className = 'bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full text-[10px] font-black uppercase';
+        badge.textContent = 'PRUEBA GRATIS (' + data.diasRestantes + ' DÍAS RESTANTES)';
+      } else {
+        badge.className = 'bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full text-[10px] font-black uppercase';
+        badge.textContent = 'BLOQUEADA / VENCIDA';
+      }
+    }
+
+    // SI ESTÁ BLOQUEADA POR CADUCIDAD O FIN DE PRUEBA: MOSTRAR BLOQUEO TOTAL
+    const modalBloqueo = document.getElementById('modalBloqueoLicencia');
+    if (data.estado === 'BLOQUEADA_PRUEBA_VENCIDA' || data.estado === 'BLOQUEADA_VENCIDA' || data.estado === 'BLOQUEADA_INVALIDA') {
+      if (modalBloqueo) {
+        document.getElementById('lblTituloBloqueo').textContent = data.estado === 'BLOQUEADA_PRUEBA_VENCIDA' ? 'PERIODO DE PRUEBA FINALIZADO' : 'MENSUALIDAD / LICENCIA VENCIDA';
+        document.getElementById('lblMensajeBloqueo').textContent = data.mensajeBloqueo || 'Tu servicio ha caducado. Para continuar operando comunícate con Josue Hernandez.';
+        modalBloqueo.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    } else {
+      if (modalBloqueo) modalBloqueo.classList.add('hidden');
+    }
+
   } catch (e) {}
 }
+
+async function desbloquearConSerialInput() {
+  const serial = document.getElementById('inputSerialDesbloqueo').value.trim();
+  if (!serial) {
+    alert('Ingresa el serial de activación.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/licencia/activar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serial })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert('🎉 ¡Licencia activada con éxito! ' + (data.message || ''));
+      location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'Serial inválido o expirado.'));
+    }
+  } catch (e) {
+    alert('Error al desbloquear: ' + e.message);
+  }
+}
+
 
 async function generarSerialMaestroAction() {
   const empresa = document.getElementById('genEmpresa').value.trim();
@@ -1711,6 +1772,8 @@ function abrirGeneradorMaestroJosue() {
   const pin = prompt('🔐 Ingrese el PIN Secreto de Desarrollador Maestro (Josue Hernandez):');
   if (pin === '9612' || pin === '9612765041') {
     document.getElementById('panelPrivadoJosue').classList.remove('hidden');
+    const empInput = document.getElementById('genEmpresa');
+    if (empInput && !empInput.value) empInput.value = (appState.config?.nombreEmpresa || 'FINANCIERA CRÉDITO FÁCIL');
     lucide.createIcons();
   } else {
     alert('❌ Acceso denegado. Solo Josue Hernandez puede generar seriales de licencia.');
@@ -1728,7 +1791,7 @@ async function activarSerialClienteAction() {
     const res = await fetch('/api/licencia/activar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ serial })
+      body: JSON.stringify({ serial, empresa: document.getElementById('genEmpresa')?.value || appState.config?.nombreEmpresa })
     });
     const data = await res.json();
     if (res.ok && data.success) {
