@@ -18,6 +18,10 @@ let tunnelUrl = '';
 // TÚNEL PÚBLICO REMOTO PARA CELULARES
 // ==========================================
 async function startPublicTunnel() {
+  if (process.env.RENDER || process.env.RAILWAY_ENVIRONMENT) {
+    console.log('☁️ [SERVIDOR EN LA NUBE ACTIVO 24/7]');
+    return;
+  }
   try {
     const localtunnel = require('localtunnel');
     let subFijo = 'financiera-nexus-central';
