@@ -1705,3 +1705,39 @@ async function sincronizarCobrosOffline() {
 
 window.addEventListener('online', sincronizarCobrosOffline);
 setInterval(sincronizarCobrosOffline, 15000);
+
+// Acceso Exclusivo para Josue Hernandez
+function abrirGeneradorMaestroJosue() {
+  const pin = prompt('🔐 Ingrese el PIN Secreto de Desarrollador Maestro (Josue Hernandez):');
+  if (pin === '9612' || pin === '9612765041') {
+    document.getElementById('panelPrivadoJosue').classList.remove('hidden');
+    lucide.createIcons();
+  } else {
+    alert('❌ Acceso denegado. Solo Josue Hernandez puede generar seriales de licencia.');
+  }
+}
+
+async function activarSerialClienteAction() {
+  const serial = document.getElementById('inputActivarSerialCliente').value.trim();
+  if (!serial) {
+    alert('Por favor pega el serial de activación recibido.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/licencia/activar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serial })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert('🎉 ¡Licencia activada con éxito! ' + (data.message || ''));
+      location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'Serial inválido o expirado.'));
+    }
+  } catch (e) {
+    alert('Error al activar licencia: ' + e.message);
+  }
+}
