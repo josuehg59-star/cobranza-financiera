@@ -52,7 +52,15 @@ async function startPublicTunnel() {
 app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 function getLocalIP() {
   const interfaces = os.networkInterfaces();
@@ -973,6 +981,32 @@ app.post('/api/licencia/activar', (req, res) => {
     message: '¡Licencia activada con éxito para ' + validacion.rutasPermitidas + ' rutas!',
     licencia: db.licencia
   });
+});
+
+// PANEL MAESTRO: RESTABLECER DE FÁBRICA / ENTREGAR LIMPIO AL CLIENTE
+app.post('/api/sistema/reset-fabrica', (req, res) => {
+  const { pinMaestro } = req.body;
+  if (pinMaestro !== '9612' && pinMaestro !== '9612765041') {
+    return res.status(403).json({ error: 'PIN Maestro incorrecto. Solo Josue Hernandez puede resetear de fábrica.' });
+  }
+
+  const db = readDB();
+  db.clientes = [];
+  db.cobros = [];
+  db.cortes = [];
+  db.gastos = [];
+
+  // Resetear saldos de cobradores
+  (db.cobradores || []).forEach(cob => {
+    cob.totalCobradoHoy = 0;
+    cob.efectivoEnMano = cob.fondoInicial || 1000;
+    cob.clientesAsignados = 0;
+    cob.clientesCobradosHoy = 0;
+    cob.efectividad = 0;
+  });
+
+  writeDB(db);
+  res.json({ success: true, message: '¡Sistema restablecido de fábrica con éxito! Toda la cartera y cortes de prueba han sido limpiados.' });
 });
 
 // Panel Maestro del Desarrollador (Josue Hernandez)

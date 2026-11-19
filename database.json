@@ -45,7 +45,8 @@
       "cobradorNombre": "Carlos Gómez",
       "modalidadCobro": "DIARIO",
       "firmaDigitalCliente": "",
-      "fotoFachada": ""
+      "fotoFachada": "",
+      "oculto": true
     },
     {
       "id": "CLI-1002",
@@ -71,7 +72,8 @@
       "cobradorNombre": "Miguel Ángel Ruiz",
       "modalidadCobro": "DIARIO",
       "firmaDigitalCliente": "",
-      "fotoFachada": ""
+      "fotoFachada": "",
+      "oculto": true
     },
     {
       "id": "CLI-1003",
@@ -97,7 +99,8 @@
       "cobradorNombre": "Carlos Gómez",
       "modalidadCobro": "DIARIO",
       "firmaDigitalCliente": "",
-      "fotoFachada": ""
+      "fotoFachada": "",
+      "oculto": true
     },
     {
       "id": "CLI-1004",
@@ -123,7 +126,8 @@
       "cobradorNombre": "Miguel Ángel Ruiz",
       "modalidadCobro": "DIARIO",
       "firmaDigitalCliente": "",
-      "fotoFachada": ""
+      "fotoFachada": "",
+      "oculto": true
     },
     {
       "id": "CLI-9453",
@@ -149,7 +153,8 @@
       "cobradorNombre": "Carlos Gómez",
       "modalidadCobro": "DIARIO",
       "firmaDigitalCliente": "",
-      "fotoFachada": ""
+      "fotoFachada": "",
+      "oculto": true
     },
     {
       "id": "CLI-8749",
@@ -175,7 +180,8 @@
       "cobradorNombre": "Miguel Ángel Ruiz",
       "modalidadCobro": "DIARIO",
       "firmaDigitalCliente": "",
-      "fotoFachada": ""
+      "fotoFachada": "",
+      "oculto": true
     }
   ],
   "cobros": [
@@ -247,7 +253,36 @@
       }
     }
   ],
-  "cortes": [],
+  "cortes": [
+    {
+      "id": "CORTE-1795066777838",
+      "fecha": "2026-11-19T05:39:37.838Z",
+      "fechaCorta": "2026-11-19",
+      "cobradorId": "ALL",
+      "cobradorNombre": "Consolidado General",
+      "fondoInicial": 3500,
+      "totalCobrado": 100,
+      "totalPrestado": 0,
+      "totalGastos": 0,
+      "totalEnMano": 3600,
+      "totalCobrosCount": 1,
+      "notas": "Corte formal de fin de ruta"
+    },
+    {
+      "id": "CORTE-1795066532021",
+      "fecha": "2026-11-19T05:35:32.021Z",
+      "fechaCorta": "2026-11-19",
+      "cobradorId": "ALL",
+      "cobradorNombre": "Consolidado General",
+      "fondoInicial": 3500,
+      "totalCobrado": 100,
+      "totalPrestado": 0,
+      "totalGastos": 0,
+      "totalEnMano": 3600,
+      "totalCobrosCount": 1,
+      "notas": "Corte formal de fin de ruta"
+    }
+  ],
   "gastos": [],
   "licencia": {
     "serial": "NEXUS-JH-3M-20271119-FDFE519D",
@@ -256,5 +291,5 @@
     "expira": "20271119",
     "activadaEl": "2026-11-19T05:26:09.178Z"
   },
-  "ultimaModificacion": 1795066134166
+  "ultimaModificacion": 1795067076045
 }

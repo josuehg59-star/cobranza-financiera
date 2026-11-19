@@ -1261,11 +1261,21 @@ function inicializarMapa() {
   const mapEl = document.getElementById('map');
   if (!mapEl) return;
 
-  appState.map = L.map('map').setView([19.4326, -99.1332], 13);
+  // Centro inicial: Tuxtla Gutiérrez, Chiapas
+  appState.map = L.map('map').setView([16.7569, -93.1292], 14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(appState.map);
+
+  // Auto-centrar en la ubicación GPS REAL del celular o PC
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      if (appState.map) {
+        appState.map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+      }
+    }, () => {}, { enableHighAccuracy: true });
+  }
 
   actualizarMarcadoresMapa();
 }
@@ -2108,6 +2118,53 @@ async function guardarModificacionCliente(e) {
   }
 }
 
+// ====================================================
+// RESTABLECER DE FÁBRICA / ENTREGAR LIMPIO AL CLIENTE
+// ====================================================
+async function restablecerDeFabricaAction() {
+  const pin = prompt('⚠️ ATENCIÓN: Esta acción borrará todas las pruebas (clientes, cobros, gastos y cortes) para entregar el sistema 100% LIMPIO al cliente.\n\nIngresa tu PIN Maestro de Desarrollador (Josue Hernandez):');
+  if (!pin) return;
+  if (pin !== '9612' && pin !== '9612765041') {
+    return alert('❌ PIN Maestro incorrecto.');
+  }
+
+  if (!confirm('¿Estás COMPLETAMENTE SEGURO de borrar todas las pruebas y dejar el sistema en ceros para el cliente?')) return;
+
+  try {
+    const res = await fetch('/api/sistema/reset-fabrica', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinMaestro: pin })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('🎉 ' + data.message);
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'No se pudo restablecer'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// EXPORTAR FUNCIONES AL ÁMBITO GLOBAL DE LA VENTANA (PARA QUE NINGÚN BOTÓN FALLE)
+window.abrirModalEditarCliente = abrirModalEditarCliente;
+window.cerrarModalEditarCliente = cerrarModalEditarCliente;
+window.guardarModificacionCliente = guardarModificacionCliente;
+window.eliminarClienteAction = eliminarClienteAction;
+
+window.abrirModalEditarCobrador = abrirModalEditarCobrador;
+window.cerrarModalEditarCobrador = cerrarModalEditarCobrador;
+window.guardarModificacionCobrador = guardarModificacionCobrador;
+window.eliminarCobradorAction = eliminarCobradorAction;
+
+window.renovarPrestamoCliente = renovarPrestamoCliente;
+window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
+window.calcularCuotaRenovacion = calcularCuotaRenovacion;
+window.confirmarRenovacionCliente = confirmarRenovacionCliente;
+window.restablecerDeFabricaAction = restablecerDeFabricaAction;
+
 async function eliminarClienteAction(clienteId) {
   const c = (appState.clientes || []).find(cli => cli.id === clienteId);
   const nombre = c ? c.nombre : clienteId;
@@ -2128,6 +2185,53 @@ async function eliminarClienteAction(clienteId) {
 }
 
 // ====================================================
+// RESTABLECER DE FÁBRICA / ENTREGAR LIMPIO AL CLIENTE
+// ====================================================
+async function restablecerDeFabricaAction() {
+  const pin = prompt('⚠️ ATENCIÓN: Esta acción borrará todas las pruebas (clientes, cobros, gastos y cortes) para entregar el sistema 100% LIMPIO al cliente.\n\nIngresa tu PIN Maestro de Desarrollador (Josue Hernandez):');
+  if (!pin) return;
+  if (pin !== '9612' && pin !== '9612765041') {
+    return alert('❌ PIN Maestro incorrecto.');
+  }
+
+  if (!confirm('¿Estás COMPLETAMENTE SEGURO de borrar todas las pruebas y dejar el sistema en ceros para el cliente?')) return;
+
+  try {
+    const res = await fetch('/api/sistema/reset-fabrica', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinMaestro: pin })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('🎉 ' + data.message);
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'No se pudo restablecer'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// EXPORTAR FUNCIONES AL ÁMBITO GLOBAL DE LA VENTANA (PARA QUE NINGÚN BOTÓN FALLE)
+window.abrirModalEditarCliente = abrirModalEditarCliente;
+window.cerrarModalEditarCliente = cerrarModalEditarCliente;
+window.guardarModificacionCliente = guardarModificacionCliente;
+window.eliminarClienteAction = eliminarClienteAction;
+
+window.abrirModalEditarCobrador = abrirModalEditarCobrador;
+window.cerrarModalEditarCobrador = cerrarModalEditarCobrador;
+window.guardarModificacionCobrador = guardarModificacionCobrador;
+window.eliminarCobradorAction = eliminarCobradorAction;
+
+window.renovarPrestamoCliente = renovarPrestamoCliente;
+window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
+window.calcularCuotaRenovacion = calcularCuotaRenovacion;
+window.confirmarRenovacionCliente = confirmarRenovacionCliente;
+window.restablecerDeFabricaAction = restablecerDeFabricaAction;
+
+// ====================================================
 // MODIFICAR Y ELIMINAR COBRADORES
 // ====================================================
 function abrirModalEditarCobrador(cobradorId) {
@@ -2139,6 +2243,8 @@ function abrirModalEditarCobrador(cobradorId) {
   document.getElementById('editCobTelefono').value = cob.telefono || '';
   document.getElementById('editCobRuta').value = cob.ruta || '';
   document.getElementById('editCobFondo').value = cob.fondoInicial || 1000;
+  const selectActivo = document.getElementById('editCobActivo');
+  if (selectActivo) selectActivo.value = cob.activo !== false ? 'true' : 'false';
 
   document.getElementById('modalEditarCobrador').classList.remove('hidden');
   lucide.createIcons();
@@ -2151,11 +2257,13 @@ function cerrarModalEditarCobrador() {
 async function guardarModificacionCobrador(e) {
   e.preventDefault();
   const id = document.getElementById('editCobId').value;
+  const selectActivo = document.getElementById('editCobActivo');
   const datos = {
     nombre: document.getElementById('editCobNombre').value.trim(),
     telefono: document.getElementById('editCobTelefono').value.trim(),
     ruta: document.getElementById('editCobRuta').value.trim(),
-    fondoInicial: Number(document.getElementById('editCobFondo').value) || 0
+    fondoInicial: Number(document.getElementById('editCobFondo').value) || 0,
+    activo: selectActivo ? selectActivo.value === 'true' : true
   };
 
   try {
@@ -2177,6 +2285,53 @@ async function guardarModificacionCobrador(e) {
   }
 }
 
+// ====================================================
+// RESTABLECER DE FÁBRICA / ENTREGAR LIMPIO AL CLIENTE
+// ====================================================
+async function restablecerDeFabricaAction() {
+  const pin = prompt('⚠️ ATENCIÓN: Esta acción borrará todas las pruebas (clientes, cobros, gastos y cortes) para entregar el sistema 100% LIMPIO al cliente.\n\nIngresa tu PIN Maestro de Desarrollador (Josue Hernandez):');
+  if (!pin) return;
+  if (pin !== '9612' && pin !== '9612765041') {
+    return alert('❌ PIN Maestro incorrecto.');
+  }
+
+  if (!confirm('¿Estás COMPLETAMENTE SEGURO de borrar todas las pruebas y dejar el sistema en ceros para el cliente?')) return;
+
+  try {
+    const res = await fetch('/api/sistema/reset-fabrica', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinMaestro: pin })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('🎉 ' + data.message);
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'No se pudo restablecer'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// EXPORTAR FUNCIONES AL ÁMBITO GLOBAL DE LA VENTANA (PARA QUE NINGÚN BOTÓN FALLE)
+window.abrirModalEditarCliente = abrirModalEditarCliente;
+window.cerrarModalEditarCliente = cerrarModalEditarCliente;
+window.guardarModificacionCliente = guardarModificacionCliente;
+window.eliminarClienteAction = eliminarClienteAction;
+
+window.abrirModalEditarCobrador = abrirModalEditarCobrador;
+window.cerrarModalEditarCobrador = cerrarModalEditarCobrador;
+window.guardarModificacionCobrador = guardarModificacionCobrador;
+window.eliminarCobradorAction = eliminarCobradorAction;
+
+window.renovarPrestamoCliente = renovarPrestamoCliente;
+window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
+window.calcularCuotaRenovacion = calcularCuotaRenovacion;
+window.confirmarRenovacionCliente = confirmarRenovacionCliente;
+window.restablecerDeFabricaAction = restablecerDeFabricaAction;
+
 async function eliminarCobradorAction(cobradorId) {
   const cob = (appState.cobradores || []).find(c => c.id === cobradorId);
   const nombre = cob ? cob.nombre : cobradorId;
@@ -2195,6 +2350,53 @@ async function eliminarCobradorAction(cobradorId) {
     alert('❌ Error de conexión: ' + err.message);
   }
 }
+
+// ====================================================
+// RESTABLECER DE FÁBRICA / ENTREGAR LIMPIO AL CLIENTE
+// ====================================================
+async function restablecerDeFabricaAction() {
+  const pin = prompt('⚠️ ATENCIÓN: Esta acción borrará todas las pruebas (clientes, cobros, gastos y cortes) para entregar el sistema 100% LIMPIO al cliente.\n\nIngresa tu PIN Maestro de Desarrollador (Josue Hernandez):');
+  if (!pin) return;
+  if (pin !== '9612' && pin !== '9612765041') {
+    return alert('❌ PIN Maestro incorrecto.');
+  }
+
+  if (!confirm('¿Estás COMPLETAMENTE SEGURO de borrar todas las pruebas y dejar el sistema en ceros para el cliente?')) return;
+
+  try {
+    const res = await fetch('/api/sistema/reset-fabrica', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinMaestro: pin })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('🎉 ' + data.message);
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'No se pudo restablecer'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// EXPORTAR FUNCIONES AL ÁMBITO GLOBAL DE LA VENTANA (PARA QUE NINGÚN BOTÓN FALLE)
+window.abrirModalEditarCliente = abrirModalEditarCliente;
+window.cerrarModalEditarCliente = cerrarModalEditarCliente;
+window.guardarModificacionCliente = guardarModificacionCliente;
+window.eliminarClienteAction = eliminarClienteAction;
+
+window.abrirModalEditarCobrador = abrirModalEditarCobrador;
+window.cerrarModalEditarCobrador = cerrarModalEditarCobrador;
+window.guardarModificacionCobrador = guardarModificacionCobrador;
+window.eliminarCobradorAction = eliminarCobradorAction;
+
+window.renovarPrestamoCliente = renovarPrestamoCliente;
+window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
+window.calcularCuotaRenovacion = calcularCuotaRenovacion;
+window.confirmarRenovacionCliente = confirmarRenovacionCliente;
+window.restablecerDeFabricaAction = restablecerDeFabricaAction;
 
 // ====================================================
 // RENOVAR CRÉDITO CLIENTE (LIQUIDADOS)
@@ -2285,3 +2487,50 @@ async function confirmarRenovacionCliente(e) {
     alert('❌ Error de conexión: ' + err.message);
   }
 }
+
+// ====================================================
+// RESTABLECER DE FÁBRICA / ENTREGAR LIMPIO AL CLIENTE
+// ====================================================
+async function restablecerDeFabricaAction() {
+  const pin = prompt('⚠️ ATENCIÓN: Esta acción borrará todas las pruebas (clientes, cobros, gastos y cortes) para entregar el sistema 100% LIMPIO al cliente.\n\nIngresa tu PIN Maestro de Desarrollador (Josue Hernandez):');
+  if (!pin) return;
+  if (pin !== '9612' && pin !== '9612765041') {
+    return alert('❌ PIN Maestro incorrecto.');
+  }
+
+  if (!confirm('¿Estás COMPLETAMENTE SEGURO de borrar todas las pruebas y dejar el sistema en ceros para el cliente?')) return;
+
+  try {
+    const res = await fetch('/api/sistema/reset-fabrica', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinMaestro: pin })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('🎉 ' + data.message);
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.error || 'No se pudo restablecer'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// EXPORTAR FUNCIONES AL ÁMBITO GLOBAL DE LA VENTANA (PARA QUE NINGÚN BOTÓN FALLE)
+window.abrirModalEditarCliente = abrirModalEditarCliente;
+window.cerrarModalEditarCliente = cerrarModalEditarCliente;
+window.guardarModificacionCliente = guardarModificacionCliente;
+window.eliminarClienteAction = eliminarClienteAction;
+
+window.abrirModalEditarCobrador = abrirModalEditarCobrador;
+window.cerrarModalEditarCobrador = cerrarModalEditarCobrador;
+window.guardarModificacionCobrador = guardarModificacionCobrador;
+window.eliminarCobradorAction = eliminarCobradorAction;
+
+window.renovarPrestamoCliente = renovarPrestamoCliente;
+window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
+window.calcularCuotaRenovacion = calcularCuotaRenovacion;
+window.confirmarRenovacionCliente = confirmarRenovacionCliente;
+window.restablecerDeFabricaAction = restablecerDeFabricaAction;
