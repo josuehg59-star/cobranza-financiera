@@ -187,23 +187,38 @@ function actualizarSelectsCobradores() {
 }
 
 function cambiarPerfilActivo(nuevoRol) {
+  const pinConfig = appState.config.pinAdmin || '1234';
+  if (nuevoRol === 'ADMIN' && appState.rolActivo !== 'ADMIN') {
+    const pinIngresado = prompt('🔐 Ingresa el PIN Maestro de Administrador:');
+    if (pinIngresado !== pinConfig) {
+      alert('❌ PIN Incorrecto. Acceso exclusivo para el Administrador.');
+      document.getElementById('selectRolActivo').value = appState.rolActivo;
+      return;
+    }
+  }
+
   appState.rolActivo = nuevoRol;
   const badge = document.getElementById('roleBadge');
   const btnGps = document.getElementById('btnGpsCobrador');
+  const tabCobradores = document.getElementById('tabBtn-cobradores');
+  const tabConfig = document.getElementById('tabBtn-config');
 
   if (nuevoRol === 'ADMIN') {
     appState.cobradorActivoObj = null;
     badge.textContent = 'ADMIN';
     badge.className = 'bg-emerald-500/20 text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-emerald-500/30';
     btnGps.classList.add('hidden');
+    if (tabCobradores) tabCobradores.classList.remove('hidden');
+    if (tabConfig) tabConfig.classList.remove('hidden');
   } else {
     appState.cobradorActivoObj = appState.cobradores.find(c => c.id === nuevoRol);
-    badge.textContent = 'COBRADOR';
+    badge.textContent = 'COBRADOR EN RUTA';
     badge.className = 'bg-cyan-500/20 text-cyan-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-cyan-500/30';
     btnGps.classList.remove('hidden');
+    if (tabCobradores) tabCobradores.classList.add('hidden');
+    if (tabConfig) tabConfig.classList.add('hidden');
   }
 
-  // Refrescar vistas
   renderizarClientes();
   actualizarKpis();
   if (appState.map) actualizarMarcadoresMapa();
@@ -345,6 +360,18 @@ function renderizarClientes() {
     lista = lista.filter(c => c.cobradorId === appState.rolActivo);
   }
 
+  // Actualizar contador de ocultos
+  const totalOcultos = appState.clientes.filter(c => c.oculto === true).length;
+  const countBadge = document.getElementById('countOcultos');
+  if (countBadge) countBadge.textContent = totalOcultos;
+
+  // Filtrar ocultos: si el filtro es OCULTOS, muestra solo ocultos; si no, oculta los que tienen oculto=true
+  if (appState.filtroEstado === 'OCULTOS') {
+    lista = lista.filter(c => c.oculto === true);
+  } else {
+    lista = lista.filter(c => !c.oculto);
+  }
+
   // Filtrar por estado
   if (appState.filtroEstado === 'PENDIENTES') {
     lista = lista.filter(c => !c.pagadoHoy && c.saldoPendiente > 0);
@@ -407,7 +434,8 @@ function renderizarClientes() {
             </div>
             <div>
               <div class="flex items-center gap-1.5">
-                <h3 class="text-sm font-black text-white leading-tight">${c.nombre}</h3>
+                <span class="bg-slate-800 text-cyan-400 font-mono text-[10px] font-black px-1.5 py-0.5 rounded border border-slate-700">#${c.id}</span>
+              <h3 class="text-sm font-black text-white leading-tight">${c.nombre}</h3>
                 ${c.firmaDigitalCliente ? 
                   `<span title="Pagaré con Firma Digital" class="text-teal-400 text-xs">✍️</span>` : 
                   `<span title="Pendiente de firmar" class="text-amber-400 text-xs">⏳</span>`
@@ -502,6 +530,12 @@ function renderizarClientes() {
 
         <!-- Fila de Herramientas: Pagaré, Firma, WhatsApp y Notificar al Cobrador -->
           <div class="flex items-center gap-1.5 text-xs">
+            ${appState.rolActivo === 'ADMIN' ? `
+              <button onclick="toggleOcultarCliente('${c.id}')" class="py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[11px] font-bold flex items-center gap-1 transition" title="${c.oculto ? 'Reactivar en ruta activa' : 'Ocultar de ruta activa'}">
+                <i data-lucide="${c.oculto ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i>
+                <span>${c.oculto ? 'Reactivar' : 'Ocultar'}</span>
+              </button>
+            ` : ''}
             <button onclick="abrirModalPagare('${c.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition">
               <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-emerald-400"></i>
               <span>Pagaré</span>
@@ -1193,7 +1227,12 @@ function actualizarMarcadoresMapa() {
   appState.markersCobradores = {};
 
   // 1. Dibujar Cobradores (Motos)
-  appState.cobradores.forEach(cob => {
+  // Estricta Privacidad: si es cobrador, SOLO dibuja su propia moto (no ve a otros)
+  let cobradoresADibujar = appState.cobradores;
+  if (appState.rolActivo !== 'ADMIN') {
+    cobradoresADibujar = appState.cobradores.filter(c => c.id === appState.rolActivo);
+  }
+  cobradoresADibujar.forEach(cob => {
     if (!cob.ultimaUbicacion || !cob.ultimaUbicacion.lat) return;
 
     const iconHtml = `
@@ -1516,4 +1555,21 @@ function enviarEnlacePersonalizadoCobrador(cobradorId) {
     "3. Solo verás tus clientes y tu efectivo en mano en tiempo real.";
 
   window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+async function toggleOcultarCliente(clienteId) {
+  try {
+    const res = await fetch('/api/clientes/' + clienteId + '/toggle-oculto', {
+      method: 'PATCH'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const cli = appState.clientes.find(c => c.id === clienteId);
+      if (cli) cli.oculto = data.oculto;
+      alert(data.oculto ? '👁️ Cliente ocultado de la ruta activa.' : '✅ Cliente restaurado y visible en la ruta.');
+      await cargarClientes();
+    }
+  } catch (e) {
+    alert('Error al cambiar visibilidad: ' + e.message);
+  }
 }

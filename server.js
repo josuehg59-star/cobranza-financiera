@@ -316,12 +316,19 @@ app.post('/api/cobradores/:id/ubicacion', (req, res) => {
 // ==========================================
 app.get('/api/clientes', (req, res) => {
   const db = readDB();
-  const { cobradorId } = req.query;
+  const { cobradorId, verOcultos } = req.query;
   let clientes = db.clientes || [];
 
   if (cobradorId && cobradorId !== 'ALL') {
     clientes = clientes.filter(c => c.cobradorId === cobradorId);
   }
+
+  if (verOcultos === 'ONLY') {
+    clientes = clientes.filter(c => c.oculto === true);
+  } else if (verOcultos !== 'ALL') {
+    clientes = clientes.filter(c => !c.oculto);
+  }
+
   res.json(clientes);
 });
 
@@ -422,6 +429,15 @@ app.patch('/api/clientes/:id/cuota', (req, res) => {
   cliente.cuotaDiaria = nuevaCuota;
   writeDB(db);
   res.json({ success: true, cliente });
+});
+
+app.patch('/api/clientes/:id/toggle-oculto', (req, res) => {
+  const db = readDB();
+  const cliente = (db.clientes || []).find(c => c.id === req.params.id);
+  if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+  cliente.oculto = !cliente.oculto;
+  writeDB(db);
+  res.json({ success: true, oculto: cliente.oculto, cliente });
 });
 
 app.patch('/api/clientes/:id/asignar-cobrador', (req, res) => {

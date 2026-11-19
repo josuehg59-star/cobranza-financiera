@@ -83,6 +83,7 @@
           <span id="tunnelStatusText" class="text-emerald-400 font-bold">Conectar Celular</span>
           <i data-lucide="smartphone" class="w-3.5 h-3.5 text-slate-400"></i>
         </button>
+          <button onclick="setFiltroEstado('OCULTOS')" id="btnFiltro-OCULTOS" class="filtro-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition">👁️ Ocultos (<span id="countOcultos">0</span>)</button>
 
         <!-- Botón GPS en Vivo (Cobrador) -->
         <button id="btnGpsCobrador" onclick="actualizarUbicacionGpsManual()" title="Enviar mi ubicación actual" class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition">
@@ -169,7 +170,7 @@
       <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2.5">
         <div class="relative flex-1 min-w-[200px]">
           <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-          <input type="text" id="inputBuscarCliente" oninput="filtrarClientes()" placeholder="Buscar cliente por nombre, dirección o teléfono..." class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+          <input type="text" id="inputBuscarCliente" oninput="filtrarClientes()" placeholder="Buscar por Código (#1001), Nombre, Dirección o Teléfono..." class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
         </div>
 
         <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
