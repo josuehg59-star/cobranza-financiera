@@ -269,18 +269,20 @@ function renderizarListaCobradores() {
           </div>
         </div>
 
-        <div class="flex items-center gap-2 pt-1">
-          <a href="https://wa.me/${cob.telefono}" target="_blank" class="flex-1 py-1.5 px-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+        <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-800">
+          <a href="https://wa.me/${cob.telefono}" target="_blank" class="py-1.5 px-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 rounded-xl text-[11px] font-bold flex items-center gap-1 transition" title="WhatsApp">
             <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-            <span>WhatsApp</span>
           </a>
-          <button onclick="enviarEnlacePersonalizadoCobrador('${cob.id}')" class="py-1.5 px-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 rounded-xl text-xs font-bold flex items-center gap-1 transition" title="Enviar enlace de celular">
+          <button onclick="enviarEnlacePersonalizadoCobrador('${cob.id}')" class="py-1.5 px-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 rounded-xl text-[11px] font-bold flex items-center gap-1 transition" title="Enviar enlace directo al celular">
             <i data-lucide="send" class="w-3.5 h-3.5"></i>
-            <span>Enviar Enlace</span>
+            <span>Enlace</span>
           </button>
-          <button onclick="seleccionarCobradorEnMapa('${cob.id}')" class="py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1 transition">
-            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-400"></i>
-            <span>Ver GPS</span>
+          <button onclick="abrirModalEditarCobrador('${cob.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition" title="Modificar datos del cobrador">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            <span>Editar</span>
+          </button>
+          <button onclick="eliminarCobradorAction('${cob.id}')" class="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl text-[11px] font-bold transition" title="Eliminar cobrador">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
         </div>
       </div>
@@ -363,25 +365,33 @@ function renderizarClientes() {
     lista = lista.filter(c => c.cobradorId === appState.rolActivo);
   }
 
-  // Actualizar contador de ocultos
+  // Actualizar contadores
   const totalOcultos = appState.clientes.filter(c => c.oculto === true).length;
-  const countBadge = document.getElementById('countOcultos');
-  if (countBadge) countBadge.textContent = totalOcultos;
+  const countOcultosBadge = document.getElementById('countOcultos');
+  if (countOcultosBadge) countOcultosBadge.textContent = totalOcultos;
 
-  // Filtrar ocultos: si el filtro es OCULTOS, muestra solo ocultos; si no, oculta los que tienen oculto=true
-  if (appState.filtroEstado === 'OCULTOS') {
+  const totalLiquidados = appState.clientes.filter(c => c.saldoPendiente === 0).length;
+  const countLiqBadge = document.getElementById('countLiquidados');
+  if (countLiqBadge) countLiqBadge.textContent = totalLiquidados;
+
+  // FILTRADO INTELIGENTE:
+  // Si el usuario elige LIQUIDADOS, muestra solo los que ya terminaron de pagar
+  if (appState.filtroEstado === 'LIQUIDADOS') {
+    lista = lista.filter(c => c.saldoPendiente === 0);
+  } else if (appState.filtroEstado === 'OCULTOS') {
     lista = lista.filter(c => c.oculto === true);
   } else {
-    lista = lista.filter(c => !c.oculto);
-  }
+    // EN LA PANTALLA PRINCIPAL (TODOS, PENDIENTES, COBRADOS, ATRASADOS):
+    // ¡YA NO SALEN LOS QUE YA LIQUIDARON NI LOS OCULTOS! Solo préstamos activos en calle
+    lista = lista.filter(c => c.saldoPendiente > 0 && !c.oculto);
 
-  // Filtrar por estado
-  if (appState.filtroEstado === 'PENDIENTES') {
-    lista = lista.filter(c => !c.pagadoHoy && c.saldoPendiente > 0);
-  } else if (appState.filtroEstado === 'COBRADOS') {
-    lista = lista.filter(c => c.pagadoHoy && c.saldoPendiente > 0);
-  } else if (appState.filtroEstado === 'ATRASADOS') {
-    lista = lista.filter(c => (c.diasAtraso > 0 || c.estatus === 'RETRASADO') && c.saldoPendiente > 0);
+    if (appState.filtroEstado === 'PENDIENTES') {
+      lista = lista.filter(c => !c.pagadoHoy);
+    } else if (appState.filtroEstado === 'COBRADOS') {
+      lista = lista.filter(c => c.pagadoHoy);
+    } else if (appState.filtroEstado === 'ATRASADOS') {
+      lista = lista.filter(c => c.diasAtraso > 0 || c.estatus === 'RETRASADO');
+    }
   }
 
   // Filtrar por texto de búsqueda
@@ -539,10 +549,25 @@ function renderizarClientes() {
                 <span>${c.oculto ? 'Reactivar' : 'Ocultar'}</span>
               </button>
             ` : ''}
-            <button onclick="abrirModalPagare('${c.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition">
-              <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-emerald-400"></i>
-              <span>Pagaré</span>
+            ${estaLiquidado ? `
+            <button onclick="renovarPrestamoCliente('${c.id}')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-black flex items-center justify-center gap-1 transition shadow-md shadow-emerald-600/30">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>Renovar Crédito</span>
             </button>
+          ` : ''}
+          <button onclick="abrirModalEditarCliente('${c.id}')" class="py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl text-[11px] font-bold flex items-center gap-1 transition" title="Modificar datos">
+            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            <span>Editar</span>
+          </button>
+          <button onclick="abrirModalPagare('${c.id}')" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 transition">
+            <i data-lucide="scroll-text" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Pagaré</span>
+          </button>
+          ${appState.rolActivo === 'ADMIN' ? `
+            <button onclick="eliminarClienteAction('${c.id}')" class="p-1.5 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-xl transition" title="Eliminar cliente">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          ` : ''}
 
             ${!c.firmaDigitalCliente ? `
               <button onclick="abrirModalFirmaPantalla('${c.id}')" class="py-1.5 px-2 bg-teal-600/20 hover:bg-teal-600/30 text-teal-300 rounded-xl text-[11px] font-bold flex items-center gap-1 transition" title="Firmar en pantalla">
