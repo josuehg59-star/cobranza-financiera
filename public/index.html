@@ -1103,6 +1103,17 @@
       <span>•</span>
       <a href="https://wa.me/529612765041" target="_blank" class="text-emerald-400 hover:underline font-bold">WhatsApp Oficial</a>
     </p>
+    <div class="pt-1 flex items-center justify-center gap-4 text-[11px]">
+      <button onclick="abrirCertificadoAutenticidad()" class="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 transition">
+        <i data-lucide="award" class="w-3.5 h-3.5"></i>
+        <span>Certificado de Autenticidad</span>
+      </button>
+      <span class="text-slate-600">•</span>
+      <button onclick="abrirAvisoPrivacidad()" class="text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 transition">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+        <span>Aviso de Privacidad Legal</span>
+      </button>
+    </div>
   </footer>
 
 
@@ -1342,6 +1353,103 @@
     </div>
   </div>
 
+
+  <!-- MODAL: CERTIFICADO DE AUTENTICIDAD -->
+  <div id="modalCertificadoAutenticidad" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3">
+    <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/60 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative text-slate-200">
+      <div class="flex items-center justify-between border-b border-amber-500/30 pb-3">
+        <div class="flex items-center gap-2 text-amber-400">
+          <i data-lucide="award" class="w-6 h-6"></i>
+          <div>
+            <h3 class="text-sm font-black uppercase tracking-wider text-white">Certificado Oficial de Autenticidad</h3>
+            <p class="text-[10px] text-amber-400 font-semibold">Licencia de Software Original & Registro de Propiedad Intelectual</p>
+          </div>
+        </div>
+        <button onclick="cerrarCertificadoAutenticidad()" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+
+      <div class="p-4 bg-slate-950/80 rounded-2xl border border-amber-500/20 text-xs space-y-2.5">
+        <div class="flex justify-between items-center text-[11px] border-b border-slate-800 pb-2">
+          <span class="text-slate-400">Software:</span>
+          <b class="text-emerald-400 font-bold">SISTEMA CRÉDITO, COBRANZA & RUTAS GPS v2.0</b>
+        </div>
+        <div class="flex justify-between items-center text-[11px] border-b border-slate-800 pb-2">
+          <span class="text-slate-400">Autor y Desarrollador Oficial:</span>
+          <b class="text-white font-black">JOSUE HERNANDEZ</b>
+        </div>
+        <div class="flex justify-between items-center text-[11px] border-b border-slate-800 pb-2">
+          <span class="text-slate-400">Contacto & Soporte Técnico:</span>
+          <span class="text-cyan-400 font-mono font-bold">+52 961 276 5041</span>
+        </div>
+        <div class="flex justify-between items-center text-[11px] border-b border-slate-800 pb-2">
+          <span class="text-slate-400">Empresa Titular de la Licencia:</span>
+          <b id="certEmpresaNombre" class="text-amber-300 font-bold">FINANCIERA CRÉDITO FÁCIL</b>
+        </div>
+        <div class="flex justify-between items-center text-[11px] border-b border-slate-800 pb-2">
+          <span class="text-slate-400">Sello Criptográfico Digital:</span>
+          <span id="certSelloDigital" class="font-mono text-[10px] text-emerald-400 truncate max-w-[220px]">NEXUS-AUTH-SECURE-SHA256</span>
+        </div>
+        <div class="flex justify-between items-center text-[11px]">
+          <span class="text-slate-400">Estado de la Licencia:</span>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px]">ORIGINAL & VERIFICADA</span>
+        </div>
+      </div>
+
+      <p class="text-[10px] text-slate-400 leading-relaxed text-justify">
+        Este software ha sido programado de forma exclusiva por <b>Josue Hernandez</b>. Se otorga una licencia de uso legítima, no transferible y sujeta al cumplimiento de las rutas y términos contratados. Queda estrictamente prohibida su copia o redistribución no autorizada.
+      </p>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
+        <button onclick="window.print()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span>Imprimir Certificado</span>
+        </button>
+        <button onclick="cerrarCertificadoAutenticidad()" class="flex-1 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AVISO DE PRIVACIDAD LEGAL -->
+  <div id="modalAvisoPrivacidad" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative text-slate-300 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 sticky top-0 bg-slate-900">
+        <div class="flex items-center gap-2 text-cyan-400">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+          <div>
+            <h3 class="text-sm font-black uppercase text-white">Aviso de Privacidad Integral</h3>
+            <p class="text-[10px] text-slate-400">Conforme a la Ley Federal de Protección de Datos Personales (LFPDPPP - México)</p>
+          </div>
+        </div>
+        <button onclick="cerrarAvisoPrivacidad()" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+
+      <div class="text-xs space-y-3 leading-relaxed text-justify text-slate-300">
+        <p>
+          <b>1. Identidad y Responsable del Tratamiento:</b> La entidad financiera que opera esta aplicación y su desarrollador tecnológico <b>Josue Hernandez</b> (Tel: 961 276 5041), en estricto apego a la <i>Ley Federal de Protección de Datos Personales en Posesión de los Particulares</i>, hacen constar que los datos recabados serán tratados bajo las más estrictas medidas de seguridad administrativas, técnicas y físicas.
+        </p>
+
+        <p>
+          <b>2. Datos Personales Recabados:</b> Para el otorgamiento de créditos, emisión de pagarés mercantiles y cobro en ruta, se solicitan: Nombre completo, número telefónico celular, dirección física del negocio/hogar, referencias y datos de aval solidario, <b>fotografías de fachada</b>, <b>firma autógrafa en pantalla táctil</b> y <b>coordenadas de geolocalización satelital (GPS)</b>.
+        </p>
+
+        <p>
+          <b>3. Finalidad del Tratamiento:</b> Los datos recabados tienen como única finalidad la autenticación de la identidad del solicitante, emisión legal de títulos de crédito (Pagarés Digitales), verificación de geolocalización de entrega y cobranza de cuotas diarias/semanales, así como el envío de recibos electrónicos vía WhatsApp.
+        </p>
+
+        <p>
+          <b>4. Derechos ARCO y No Transferencia:</b> Los datos personales jamás serán vendidos ni compartidos con empresas de publicidad de terceros. El titular podrá ejercer en cualquier momento sus derechos de Acceso, Rectificación, Cancelación u Oposición (ARCO) comunicándose directamente a las oficinas de la financiera o al canal de soporte oficial.
+        </p>
+      </div>
+
+      <div class="pt-3 border-t border-slate-800">
+        <button onclick="cerrarAvisoPrivacidad()" class="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition">
+          Entendido y Aceptado
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ÁREA IMPRIMIBLE: TICKET TÉRMICO 58mm -->
   <div id="thermalPrintArea" class="hidden">

@@ -2165,6 +2165,36 @@ window.calcularCuotaRenovacion = calcularCuotaRenovacion;
 window.confirmarRenovacionCliente = confirmarRenovacionCliente;
 window.restablecerDeFabricaAction = restablecerDeFabricaAction;
 
+// CERTIFICADO DE AUTENTICIDAD Y AVISO DE PRIVACIDAD LEGAL
+function abrirCertificadoAutenticidad() {
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const elEmpresa = document.getElementById('certEmpresaNombre');
+  const elSello = document.getElementById('certSelloDigital');
+  if (elEmpresa) elEmpresa.textContent = empresa;
+  if (elSello) elSello.textContent = (appState.licencia?.serial || 'NEXUS-AUTH-SECURE-SHA256');
+
+  document.getElementById('modalCertificadoAutenticidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarCertificadoAutenticidad() {
+  document.getElementById('modalCertificadoAutenticidad').classList.add('hidden');
+}
+
+function abrirAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.add('hidden');
+}
+
+window.abrirCertificadoAutenticidad = abrirCertificadoAutenticidad;
+window.cerrarCertificadoAutenticidad = cerrarCertificadoAutenticidad;
+window.abrirAvisoPrivacidad = abrirAvisoPrivacidad;
+window.cerrarAvisoPrivacidad = cerrarAvisoPrivacidad;
+
 async function eliminarClienteAction(clienteId) {
   const c = (appState.clientes || []).find(cli => cli.id === clienteId);
   const nombre = c ? c.nombre : clienteId;
@@ -2230,6 +2260,36 @@ window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
 window.calcularCuotaRenovacion = calcularCuotaRenovacion;
 window.confirmarRenovacionCliente = confirmarRenovacionCliente;
 window.restablecerDeFabricaAction = restablecerDeFabricaAction;
+
+// CERTIFICADO DE AUTENTICIDAD Y AVISO DE PRIVACIDAD LEGAL
+function abrirCertificadoAutenticidad() {
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const elEmpresa = document.getElementById('certEmpresaNombre');
+  const elSello = document.getElementById('certSelloDigital');
+  if (elEmpresa) elEmpresa.textContent = empresa;
+  if (elSello) elSello.textContent = (appState.licencia?.serial || 'NEXUS-AUTH-SECURE-SHA256');
+
+  document.getElementById('modalCertificadoAutenticidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarCertificadoAutenticidad() {
+  document.getElementById('modalCertificadoAutenticidad').classList.add('hidden');
+}
+
+function abrirAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.add('hidden');
+}
+
+window.abrirCertificadoAutenticidad = abrirCertificadoAutenticidad;
+window.cerrarCertificadoAutenticidad = cerrarCertificadoAutenticidad;
+window.abrirAvisoPrivacidad = abrirAvisoPrivacidad;
+window.cerrarAvisoPrivacidad = cerrarAvisoPrivacidad;
 
 // ====================================================
 // MODIFICAR Y ELIMINAR COBRADORES
@@ -2332,6 +2392,36 @@ window.calcularCuotaRenovacion = calcularCuotaRenovacion;
 window.confirmarRenovacionCliente = confirmarRenovacionCliente;
 window.restablecerDeFabricaAction = restablecerDeFabricaAction;
 
+// CERTIFICADO DE AUTENTICIDAD Y AVISO DE PRIVACIDAD LEGAL
+function abrirCertificadoAutenticidad() {
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const elEmpresa = document.getElementById('certEmpresaNombre');
+  const elSello = document.getElementById('certSelloDigital');
+  if (elEmpresa) elEmpresa.textContent = empresa;
+  if (elSello) elSello.textContent = (appState.licencia?.serial || 'NEXUS-AUTH-SECURE-SHA256');
+
+  document.getElementById('modalCertificadoAutenticidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarCertificadoAutenticidad() {
+  document.getElementById('modalCertificadoAutenticidad').classList.add('hidden');
+}
+
+function abrirAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.add('hidden');
+}
+
+window.abrirCertificadoAutenticidad = abrirCertificadoAutenticidad;
+window.cerrarCertificadoAutenticidad = cerrarCertificadoAutenticidad;
+window.abrirAvisoPrivacidad = abrirAvisoPrivacidad;
+window.cerrarAvisoPrivacidad = cerrarAvisoPrivacidad;
+
 async function eliminarCobradorAction(cobradorId) {
   const cob = (appState.cobradores || []).find(c => c.id === cobradorId);
   const nombre = cob ? cob.nombre : cobradorId;
@@ -2397,6 +2487,36 @@ window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
 window.calcularCuotaRenovacion = calcularCuotaRenovacion;
 window.confirmarRenovacionCliente = confirmarRenovacionCliente;
 window.restablecerDeFabricaAction = restablecerDeFabricaAction;
+
+// CERTIFICADO DE AUTENTICIDAD Y AVISO DE PRIVACIDAD LEGAL
+function abrirCertificadoAutenticidad() {
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const elEmpresa = document.getElementById('certEmpresaNombre');
+  const elSello = document.getElementById('certSelloDigital');
+  if (elEmpresa) elEmpresa.textContent = empresa;
+  if (elSello) elSello.textContent = (appState.licencia?.serial || 'NEXUS-AUTH-SECURE-SHA256');
+
+  document.getElementById('modalCertificadoAutenticidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarCertificadoAutenticidad() {
+  document.getElementById('modalCertificadoAutenticidad').classList.add('hidden');
+}
+
+function abrirAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.add('hidden');
+}
+
+window.abrirCertificadoAutenticidad = abrirCertificadoAutenticidad;
+window.cerrarCertificadoAutenticidad = cerrarCertificadoAutenticidad;
+window.abrirAvisoPrivacidad = abrirAvisoPrivacidad;
+window.cerrarAvisoPrivacidad = cerrarAvisoPrivacidad;
 
 // ====================================================
 // RENOVAR CRÉDITO CLIENTE (LIQUIDADOS)
@@ -2534,3 +2654,33 @@ window.cerrarModalRenovarCredito = cerrarModalRenovarCredito;
 window.calcularCuotaRenovacion = calcularCuotaRenovacion;
 window.confirmarRenovacionCliente = confirmarRenovacionCliente;
 window.restablecerDeFabricaAction = restablecerDeFabricaAction;
+
+// CERTIFICADO DE AUTENTICIDAD Y AVISO DE PRIVACIDAD LEGAL
+function abrirCertificadoAutenticidad() {
+  const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+  const elEmpresa = document.getElementById('certEmpresaNombre');
+  const elSello = document.getElementById('certSelloDigital');
+  if (elEmpresa) elEmpresa.textContent = empresa;
+  if (elSello) elSello.textContent = (appState.licencia?.serial || 'NEXUS-AUTH-SECURE-SHA256');
+
+  document.getElementById('modalCertificadoAutenticidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarCertificadoAutenticidad() {
+  document.getElementById('modalCertificadoAutenticidad').classList.add('hidden');
+}
+
+function abrirAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarAvisoPrivacidad() {
+  document.getElementById('modalAvisoPrivacidad').classList.add('hidden');
+}
+
+window.abrirCertificadoAutenticidad = abrirCertificadoAutenticidad;
+window.cerrarCertificadoAutenticidad = cerrarCertificadoAutenticidad;
+window.abrirAvisoPrivacidad = abrirAvisoPrivacidad;
+window.cerrarAvisoPrivacidad = cerrarAvisoPrivacidad;
