@@ -19,11 +19,18 @@ let tunnelUrl = '';
 async function startPublicTunnel() {
   try {
     const localtunnel = require('localtunnel');
-    const customSubdomain = 'financiera-nexus-' + (Math.floor(1000 + Math.random() * 9000));
-    activeTunnel = await localtunnel({ port: PORT, subdomain: customSubdomain });
+    let subFijo = 'financiera-nexus-central';
+    try {
+      const dbTemp = readDB();
+      if (dbTemp && dbTemp.config && dbTemp.config.subdominioFijo) {
+        subFijo = dbTemp.config.subdominioFijo;
+      }
+    } catch(e) {}
+
+    activeTunnel = await localtunnel({ port: PORT, subdomain: subFijo });
     tunnelUrl = activeTunnel.url;
-    console.log('🌐 [TÚNEL PÚBLICO ACTIVO PARA CELULARES EN LA CALLE / 4G / 5G]');
-    console.log('📲 Enlace público: ' + tunnelUrl);
+    console.log('🌐 [TÚNEL PÚBLICO FIJO ACTIVO PARA CELULARES EN LA CALLE / 4G / 5G]');
+    console.log('📲 Enlace público permanente: ' + tunnelUrl);
 
     activeTunnel.on('close', () => {
       console.log('Túnel cerrado. Reconectando...');
