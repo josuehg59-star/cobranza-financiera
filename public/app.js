@@ -2041,3 +2041,247 @@ async function ejecutarActualizacionGitHub() {
     }
   }
 }
+
+// ====================================================
+// MODIFICAR Y ELIMINAR CLIENTES
+// ====================================================
+function abrirModalEditarCliente(clienteId) {
+  const c = (appState.clientes || []).find(cli => cli.id === clienteId);
+  if (!c) return alert('Cliente no encontrado');
+
+  document.getElementById('editClienteId').value = c.id;
+  document.getElementById('editNombre').value = c.nombre || '';
+  document.getElementById('editTelefono').value = c.telefono || '';
+  document.getElementById('editCuota').value = c.cuotaDiaria || '';
+  document.getElementById('editDireccion').value = c.direccion || '';
+  document.getElementById('editAvalNombre').value = c.avalNombre || '';
+  document.getElementById('editAvalTelefono').value = c.avalTelefono || '';
+
+  const selectCob = document.getElementById('editCobrador');
+  if (selectCob) {
+    selectCob.innerHTML = (appState.cobradores || []).map(cob => `
+      <option value="${cob.id}" ${cob.id === c.cobradorId ? 'selected' : ''}>${cob.nombre} (${cob.ruta})</option>
+    `).join('');
+  }
+
+  document.getElementById('modalEditarCliente').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarModalEditarCliente() {
+  document.getElementById('modalEditarCliente').classList.add('hidden');
+}
+
+async function guardarModificacionCliente(e) {
+  e.preventDefault();
+  const id = document.getElementById('editClienteId').value;
+  const selectCob = document.getElementById('editCobrador');
+  const cobradorObj = (appState.cobradores || []).find(cob => cob.id === (selectCob ? selectCob.value : ''));
+
+  const datos = {
+    nombre: document.getElementById('editNombre').value.trim(),
+    telefono: document.getElementById('editTelefono').value.trim(),
+    cuotaDiaria: Number(document.getElementById('editCuota').value) || 0,
+    direccion: document.getElementById('editDireccion').value.trim(),
+    cobradorId: selectCob ? selectCob.value : 'COB-1',
+    cobradorNombre: cobradorObj ? cobradorObj.nombre : 'Cobrador',
+    avalNombre: document.getElementById('editAvalNombre').value.trim(),
+    avalTelefono: document.getElementById('editAvalTelefono').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/clientes/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+    if (res.ok) {
+      alert('✅ Cliente modificado con éxito.');
+      cerrarModalEditarCliente();
+      await cargarClientes(false);
+    } else {
+      const err = await res.json();
+      alert('❌ Error al modificar: ' + (err.error || 'Error'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+async function eliminarClienteAction(clienteId) {
+  const c = (appState.clientes || []).find(cli => cli.id === clienteId);
+  const nombre = c ? c.nombre : clienteId;
+  if (!confirm(`¿Estás seguro de ELIMINAR al cliente "${nombre}"? Se borrará todo su historial y pagaré.`)) return;
+
+  try {
+    const res = await fetch('/api/clientes/' + clienteId, { method: 'DELETE' });
+    if (res.ok) {
+      alert('✅ Cliente eliminado con éxito.');
+      await cargarClientes(false);
+    } else {
+      const err = await res.json();
+      alert('❌ No se pudo eliminar: ' + (err.error || 'Error'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// ====================================================
+// MODIFICAR Y ELIMINAR COBRADORES
+// ====================================================
+function abrirModalEditarCobrador(cobradorId) {
+  const cob = (appState.cobradores || []).find(c => c.id === cobradorId);
+  if (!cob) return alert('Cobrador no encontrado');
+
+  document.getElementById('editCobId').value = cob.id;
+  document.getElementById('editCobNombre').value = cob.nombre || '';
+  document.getElementById('editCobTelefono').value = cob.telefono || '';
+  document.getElementById('editCobRuta').value = cob.ruta || '';
+  document.getElementById('editCobFondo').value = cob.fondoInicial || 1000;
+
+  document.getElementById('modalEditarCobrador').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarModalEditarCobrador() {
+  document.getElementById('modalEditarCobrador').classList.add('hidden');
+}
+
+async function guardarModificacionCobrador(e) {
+  e.preventDefault();
+  const id = document.getElementById('editCobId').value;
+  const datos = {
+    nombre: document.getElementById('editCobNombre').value.trim(),
+    telefono: document.getElementById('editCobTelefono').value.trim(),
+    ruta: document.getElementById('editCobRuta').value.trim(),
+    fondoInicial: Number(document.getElementById('editCobFondo').value) || 0
+  };
+
+  try {
+    const res = await fetch('/api/cobradores/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+    if (res.ok) {
+      alert('✅ Cobrador modificado con éxito.');
+      cerrarModalEditarCobrador();
+      await cargarCobradores(false);
+    } else {
+      const err = await res.json();
+      alert('❌ Error al modificar cobrador: ' + (err.error || 'Error'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+async function eliminarCobradorAction(cobradorId) {
+  const cob = (appState.cobradores || []).find(c => c.id === cobradorId);
+  const nombre = cob ? cob.nombre : cobradorId;
+  if (!confirm(`¿Estás seguro de ELIMINAR al cobrador "${nombre}"? Sus rutas quedarán disponibles.`)) return;
+
+  try {
+    const res = await fetch('/api/cobradores/' + cobradorId, { method: 'DELETE' });
+    if (res.ok) {
+      alert('✅ Cobrador eliminado.');
+      await cargarCobradores(false);
+    } else {
+      const err = await res.json();
+      alert('❌ No se pudo eliminar: ' + (err.error || 'Error'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}
+
+// ====================================================
+// RENOVAR CRÉDITO CLIENTE (LIQUIDADOS)
+// ====================================================
+function renovarPrestamoCliente(clienteId) {
+  const c = (appState.clientes || []).find(cli => cli.id === clienteId);
+  if (!c) return alert('Cliente no encontrado');
+
+  document.getElementById('renovarClienteId').value = c.id;
+  document.getElementById('renovarNombreCliente').textContent = c.nombre;
+  document.getElementById('renovarCobradorCliente').textContent = c.cobradorNombre || 'Cobrador';
+  document.getElementById('renovarMonto').value = c.prestamoOriginal || 1000;
+  document.getElementById('renovarInteres').value = c.interesPorc || 20;
+  document.getElementById('renovarDias').value = c.diasPlazo || 15;
+  document.getElementById('renovarModalidad').value = c.modalidadCobro || 'DIARIO';
+
+  calcularCuotaRenovacion();
+  document.getElementById('modalRenovarCredito').classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function cerrarModalRenovarCredito() {
+  document.getElementById('modalRenovarCredito').classList.add('hidden');
+}
+
+function calcularCuotaRenovacion() {
+  const monto = Number(document.getElementById('renovarMonto').value) || 0;
+  const interes = Number(document.getElementById('renovarInteres').value) || 0;
+  const dias = Number(document.getElementById('renovarDias').value) || 1;
+
+  const total = monto + (monto * (interes / 100));
+  const cuota = Math.ceil(total / dias);
+
+  document.getElementById('renovarTotalPagar').textContent = '$' + total.toFixed(2);
+  document.getElementById('renovarCuotaDiaria').textContent = '$' + cuota.toFixed(2) + ' / pago';
+}
+
+async function confirmarRenovacionCliente(e) {
+  e.preventDefault();
+  const id = document.getElementById('renovarClienteId').value;
+  const c = (appState.clientes || []).find(cli => cli.id === id);
+
+  const datos = {
+    prestamoOriginal: Number(document.getElementById('renovarMonto').value) || 1000,
+    interesPorc: Number(document.getElementById('renovarInteres').value) || 20,
+    diasPlazo: Number(document.getElementById('renovarDias').value) || 15,
+    modalidadCobro: document.getElementById('renovarModalidad').value || 'DIARIO'
+  };
+
+  try {
+    const res = await fetch('/api/clientes/' + id + '/renovar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+    if (res.ok) {
+      alert('🎉 ¡Crédito RENOVADO con éxito! El cliente ya está activo de nuevo en su ruta.');
+      cerrarModalRenovarCredito();
+      await cargarClientes(false);
+
+      if (c && c.telefono && confirm('¿Deseas enviar el comprobante de Renovación por WhatsApp al cliente?')) {
+        const empresa = appState.config?.nombreEmpresa || "FINANCIERA CRÉDITO FÁCIL";
+        const ganancia = datos.prestamoOriginal * (datos.interesPorc / 100);
+        const total = datos.prestamoOriginal + ganancia;
+        const cuota = Math.ceil(total / datos.diasPlazo);
+
+        const msg = 
+          "🎉 *¡FELICIDADES! TU CRÉDITO HA SIDO RENOVADO* 🎉\n" +
+          "🏢 *" + empresa + "*\n" +
+          "-----------------------------------------\n" +
+          "Estimado(a) *" + c.nombre + "*:\n\n" +
+          "Gracias a tu excelente puntualidad, tu crédito ha sido *RENOVADO CON ÉXITO*.\n\n" +
+          "💰 *Nuevo Monto:* $" + datos.prestamoOriginal.toFixed(2) + " MXN\n" +
+          "📅 *Plazo:* " + datos.diasPlazo + " Días\n" +
+          "💵 *Cuota:* $" + cuota.toFixed(2) + " MXN\n" +
+          "📊 *Total a Pagar:* $" + total.toFixed(2) + " MXN\n" +
+          "-----------------------------------------\n" +
+          "¡Gracias por tu confianza y preferencia!";
+
+        const tel = (c.telefono || '').replace(/\D/g, '');
+        window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(msg), '_blank');
+      }
+    } else {
+      const err = await res.json();
+      alert('❌ No se pudo renovar: ' + (err.error || 'Error'));
+    }
+  } catch (err) {
+    alert('❌ Error de conexión: ' + err.message);
+  }
+}

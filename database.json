@@ -1,11 +1,11 @@
 {
   "config": {
-    "nombreEmpresa": "https://financiera-nexus-8880.loca.lt",
+    "nombreEmpresa": "Josue Hernandez",
     "eslogan": "Préstamos Diarios y Soluciones al Instante",
-    "telefono": "55 1234 5678",
+    "telefono": "9612765041",
     "direccion": "Av. Central #120, Col. Centro",
     "moneda": "$",
-    "pinAdmin": "1234",
+    "pinAdmin": "5656",
     "tasaInteresDefault": 20,
     "diasPlazoDefault": 24,
     "logo": ""
@@ -34,11 +34,11 @@
       "cuotaDiaria": 100,
       "diasPlazo": 24,
       "fechaInicio": "2026-11-08",
-      "saldoPendiente": 1400,
-      "totalAbonado": 1000,
+      "saldoPendiente": 1300,
+      "totalAbonado": 1100,
       "diasAtraso": 0,
       "estatus": "AL_DIA",
-      "ultimoPagoFecha": "2026-11-18",
+      "ultimoPagoFecha": "2026-11-19",
       "ultimoPagoMonto": 100,
       "pagadoHoy": true,
       "cobradorId": "COB-1",
@@ -180,6 +180,22 @@
   ],
   "cobros": [
     {
+      "id": "COB-1795066134166",
+      "folio": "REC-134123",
+      "clienteId": "CLI-1001",
+      "clienteNombre": "María Elena Torres",
+      "monto": 100,
+      "saldoAnterior": 1400,
+      "saldoNuevo": 1300,
+      "fecha": "2026-11-19T05:28:54.166Z",
+      "fechaHoraTexto": "18/11/26, 11:28 p.m.",
+      "tipo": "CUOTA_DIARIA",
+      "cobradorId": "COB-1",
+      "cobradorNombre": "Carlos Gómez",
+      "lat": 19.4326,
+      "lng": -99.1332
+    },
+    {
       "id": "COB-1795044483469",
       "clienteId": "CLI-8749",
       "clienteNombre": "luis",
@@ -214,7 +230,7 @@
       "ultimaUbicacion": {
         "lat": 19.4326,
         "lng": -99.1332,
-        "hora": "2026-11-18T23:56:52.452Z"
+        "hora": "2026-11-19T05:28:54.123Z"
       }
     },
     {
@@ -234,11 +250,11 @@
   "cortes": [],
   "gastos": [],
   "licencia": {
-    "serial": "NEXUS-JH-3M-20271119-C4D5A951",
-    "empresa": "https://financiera-nexus-8880.loca.lt",
+    "serial": "NEXUS-JH-3M-20271119-FDFE519D",
+    "empresa": "josue hernandez",
     "rutasPermitidas": 3,
     "expira": "20271119",
-    "activadaEl": "2026-11-19T03:57:06.588Z"
+    "activadaEl": "2026-11-19T05:26:09.178Z"
   },
-  "ultimaModificacion": 1795064677722
+  "ultimaModificacion": 1795066134166
 }

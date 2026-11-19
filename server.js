@@ -453,6 +453,49 @@ app.put('/api/clientes/:id', (req, res) => {
   res.json({ success: true, cliente: db.clientes[index] });
 });
 
+// RENOVAR CRÉDITO DE UN CLIENTE (LUEGO DE LIQUIDAR)
+app.post('/api/clientes/:id/renovar', (req, res) => {
+  const db = readDB();
+  const cliente = (db.clientes || []).find(c => c.id === req.params.id);
+  if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado' });
+
+  const { prestamoOriginal, interesPorc, diasPlazo, modalidadCobro } = req.body;
+  const capital = Number(prestamoOriginal) || 1000;
+  const interes = Number(interesPorc) || 20;
+  const dias = Number(diasPlazo) || 15;
+  const ganancia = capital * (interes / 100);
+  const totalPagar = capital + ganancia;
+  const cuotaDiaria = Math.ceil(totalPagar / dias);
+
+  // Respaldar crédito anterior en el historial
+  if (!cliente.historialCreditos) cliente.historialCreditos = [];
+  cliente.historialCreditos.push({
+    prestamoOriginal: cliente.prestamoOriginal,
+    totalPagar: cliente.totalPagar,
+    totalAbonado: cliente.totalAbonado,
+    fechaInicio: cliente.fechaInicio,
+    fechaLiquidacion: cliente.ultimoPagoFecha || new Date().toISOString()
+  });
+
+  // Activar nuevo préstamo
+  cliente.prestamoOriginal = capital;
+  cliente.interesPorc = interes;
+  cliente.diasPlazo = dias;
+  cliente.totalPagar = totalPagar;
+  cliente.cuotaDiaria = cuotaDiaria;
+  cliente.modalidadCobro = modalidadCobro || cliente.modalidadCobro || 'DIARIO';
+  cliente.totalAbonado = 0;
+  cliente.saldoPendiente = totalPagar;
+  cliente.estatus = 'ACTIVO';
+  cliente.pagadoHoy = false;
+  cliente.diasAtraso = 0;
+  cliente.fechaInicio = new Date().toISOString().split('T')[0];
+  cliente.folioPagare = "PAG-" + Date.now().toString().slice(-6);
+
+  writeDB(db);
+  res.json({ success: true, message: '¡Crédito renovado con éxito!', cliente });
+});
+
 app.patch('/api/clientes/:id/cuota', (req, res) => {
   const db = readDB();
   const cliente = (db.clientes || []).find(c => c.id === req.params.id);
