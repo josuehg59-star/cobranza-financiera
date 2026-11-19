@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
+const compression = require('compression');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -45,8 +46,9 @@ async function startPublicTunnel() {
 }
 
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d' }));
 
 function getLocalIP() {
   const interfaces = os.networkInterfaces();
@@ -76,6 +78,7 @@ function readDB() {
 
 function writeDB(data) {
   try {
+    data.ultimaModificacion = Date.now();
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
     return true;
   } catch (error) {
@@ -83,6 +86,19 @@ function writeDB(data) {
     return false;
   }
 }
+
+// ==========================================
+// PING ULTRA-LIGERO DE SINCRONIZACIÓN (AHORRO MÁXIMO DE DATOS)
+// Solo envía 40 bytes para verificar si hubo cambios
+// ==========================================
+app.get('/api/sync/check', (req, res) => {
+  const db = readDB();
+  res.json({
+    v: db.ultimaModificacion || 0,
+    cobradores: (db.cobradores || []).length,
+    clientes: (db.clientes || []).length
+  });
+});
 
 function initDB() {
   // Asegurar licencia por defecto

@@ -59,11 +59,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Escuchar redimensionamiento para el canvas
   window.addEventListener('resize', ajustarTamanioCanvas);
   
-  // Sincronización automática en tiempo real cada 8 segundos
+  // Sincronización Inteligente con Ahorro Máximo de Datos Móviles (4G)
+  // Solo envía un ping de 40 bytes; no gasta megas si no hay cambios nuevos
   setInterval(async () => {
-    await cargarCobradores(true);
-    await cargarClientes(true);
-  }, 8000);
+    try {
+      const res = await fetch('/api/sync/check');
+      if (res.ok) {
+        const data = await res.json();
+        if (!appState.lastSyncV || appState.lastSyncV !== data.v) {
+          appState.lastSyncV = data.v;
+          await cargarCobradores(true);
+          await cargarClientes(true);
+        }
+      }
+    } catch (e) {}
+  }, 12000);
 });
 
 
@@ -329,7 +339,11 @@ async function guardarNuevoCobrador(e) {
 // ====================================================
 async function cargarClientes(silencioso = false) {
   try {
-    const res = await fetch('/api/clientes');
+    let url = '/api/clientes';
+    if (appState.rolActivo && appState.rolActivo !== 'ADMIN') {
+      url += '?cobradorId=' + encodeURIComponent(appState.rolActivo);
+    }
+    const res = await fetch(url);
     appState.clientes = await res.json();
     renderizarClientes();
     actualizarKpis();
@@ -1344,6 +1358,7 @@ function optimizarRutaVisual() {
   alert('📍 Ruta trazada geográficamente en orden secuencial para menor recorrido de gasolina.');
 }
 
+let ultimoEnvioGps = 0;
 function iniciarRastreoGpsAutomatico() {
   if (!navigator.geolocation) return;
   navigator.geolocation.watchPosition((pos) => {
@@ -1351,7 +1366,10 @@ function iniciarRastreoGpsAutomatico() {
       lat: pos.coords.latitude,
       lng: pos.coords.longitude
     };
-    if (appState.rolActivo !== 'ADMIN') {
+    const ahora = Date.now();
+    // Ahorro de batería y datos móviles (4G): enviar al servidor máximo cada 45 segundos
+    if (appState.rolActivo !== 'ADMIN' && ahora - ultimoEnvioGps > 45000) {
+      ultimoEnvioGps = ahora;
       actualizarUbicacionGpsManual(true);
     }
   }, () => {}, { enableHighAccuracy: true });
