@@ -43,6 +43,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarClientes();
   await cargarTunnelStatus();
   inicializarMapa();
+  cargarEstadoLicencia();
+  verificarActualizacionesGitHub();
+  sincronizarCobrosOffline();
   iniciarRastreoGpsAutomatico();
 
   // Revisar si viene enlace personalizado para cobrador en la URL (?cobrador=COB-1)
@@ -1573,3 +1576,132 @@ async function toggleOcultarCliente(clienteId) {
     alert('Error al cambiar visibilidad: ' + e.message);
   }
 }
+
+// ==========================================
+// MÓDULO LICENCIAS Y GITHUB UPDATER - JOSUE HERNANDEZ (9612765041)
+// ==========================================
+async function cargarEstadoLicencia() {
+  try {
+    const res = await fetch('/api/licencia/status');
+    const data = await res.json();
+    
+    const rutasEl = document.getElementById('lblLicRutas');
+    const dispEl = document.getElementById('lblLicDisponibles');
+    const vigEl = document.getElementById('lblLicVigencia');
+
+    if (rutasEl) rutasEl.textContent = data.rutasPermitidas + ' Cobradores';
+    if (dispEl) dispEl.textContent = data.rutasDisponibles + ' Libres';
+    if (vigEl) vigEl.textContent = data.expira;
+  } catch (e) {}
+}
+
+async function generarSerialMaestroAction() {
+  const empresa = document.getElementById('genEmpresa').value.trim();
+  const rutas = document.getElementById('genRutas').value;
+  const tipo = document.getElementById('genTipo').value;
+
+  if (!empresa) {
+    alert('Ingresa el nombre de la financiera del cliente.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/licencia/generar-maestro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinDev: '9612', empresa, rutas, tipo, dias: tipo === 'MENSUAL' ? 30 : 365 })
+    });
+    const data = await res.json();
+    if (data.success && data.licencia) {
+      document.getElementById('txtSerialGenerado').textContent = data.licencia.serial;
+      document.getElementById('resultadoSerialBox').classList.remove('hidden');
+      appState.ultimoSerialGenerado = data.licencia;
+      alert('✅ ¡Serial generado con éxito!');
+    } else {
+      alert('Error: ' + (data.error || 'No se pudo generar'));
+    }
+  } catch (e) {
+    alert('Error al generar serial: ' + e.message);
+  }
+}
+
+function copiarMensajeLicenciaWhatsApp() {
+  const lic = appState.ultimoSerialGenerado;
+  if (!lic) return;
+
+  const msg = 
+    "🏛️ *BIENVENIDO A TU PLATAFORMA FINANCIERA* 🏛️\n" +
+    "Desarrollado por: *Josue Hernandez* (Tel: 961 276 5041)\n\n" +
+    "Tu licencia oficial de activación ha sido autorizada:\n" +
+    "-----------------------------------------\n" +
+    "🏢 *Financiera:* " + lic.empresa + "\n" +
+    "🔑 *Serial de Activación:* " + lic.serial + "\n" +
+    "🛵 *Rutas / Motos Contratadas:* " + lic.rutasPermitidas + " Cobradores\n" +
+    "📅 *Vigencia:* " + lic.expira + "\n" +
+    "-----------------------------------------\n" +
+    "📲 *Soporte y Renovaciones Directas:*\n" +
+    "Josue Hernandez - WhatsApp: 961 276 5041";
+
+  navigator.clipboard.writeText(msg);
+  alert('📋 Mensaje copiado con tus datos listo para enviar por WhatsApp.');
+}
+
+// ==========================================
+// VERIFICADOR DE AUTO-ACTUALIZACIÓN GITHUB
+// ==========================================
+async function verificarActualizacionesGitHub() {
+  try {
+    const repo = "josuehg59-star/cobranza-financiera";
+    const res = await fetch('https://api.github.com/repos/' + repo + '/releases/latest');
+    if (!res.ok) return;
+    const release = await res.json();
+    const versionGitHub = release.tag_name || release.name;
+
+    // Si hay versión nueva diferente a la 1.0.0 instalada
+    if (versionGitHub && versionGitHub !== 'v1.0.0' && versionGitHub !== '1.0.0') {
+      const banner = document.getElementById('githubUpdateBanner');
+      const lbl = document.getElementById('lblNuevaVersion');
+      const btn = document.getElementById('btnDescargarUpdate');
+
+      if (banner && lbl && btn) {
+        lbl.textContent = versionGitHub;
+        btn.href = release.html_url;
+        banner.classList.remove('hidden');
+      }
+    }
+  } catch (e) {
+    // Silencioso si no hay internet o no hay release
+  }
+}
+
+// ==========================================
+// MODO OFFLINE (COBRAR SIN DATOS / INTERNET)
+// ==========================================
+function guardarCobroOfflineLocal(cobroData) {
+  let offline = JSON.parse(localStorage.getItem('nexus_cobros_offline') || '[]');
+  offline.push(cobroData);
+  localStorage.setItem('nexus_cobros_offline', JSON.stringify(offline));
+}
+
+async function sincronizarCobrosOffline() {
+  if (!navigator.onLine) return;
+  const offline = JSON.parse(localStorage.getItem('nexus_cobros_offline') || '[]');
+  if (offline.length === 0) return;
+
+  try {
+    const res = await fetch('/api/cobros/batch-offline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cobrosOffline: offline })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.removeItem('nexus_cobros_offline');
+      console.log('✅ Cobros offline sincronizados con el Administrador:', data.procesados);
+      await cargarClientes(true);
+    }
+  } catch (e) {}
+}
+
+window.addEventListener('online', sincronizarCobrosOffline);
+setInterval(sincronizarCobrosOffline, 15000);
